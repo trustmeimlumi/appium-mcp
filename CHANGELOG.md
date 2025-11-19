@@ -1,3 +1,9 @@
+## [1.1.11](https://github.com/appium/appium-mcp/compare/v1.1.10...v1.1.11) (2025-11-19)
+
+### Bug Fixes
+
+* prioritize explicit capabilities over auto-detected platformVersion ([#27](https://github.com/appium/appium-mcp/issues/27)) ([6a7d4db](https://github.com/appium/appium-mcp/commit/6a7d4db8b8cb1e54356f7db16b69ea3e6fd4dd1d))
+
 ## [1.1.10](https://github.com/appium/appium-mcp/compare/v1.1.9...v1.1.10) (2025-11-18)
 
 ### Miscellaneous Chores
