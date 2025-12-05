@@ -1,3 +1,9 @@
+## [1.3.0](https://github.com/appium/appium-mcp/compare/v1.2.0...v1.3.0) (2025-12-05)
+
+### Features
+
+* add new tools to get active contexts and switch context ([#51](https://github.com/appium/appium-mcp/issues/51)) ([e6ffad0](https://github.com/appium/appium-mcp/commit/e6ffad0a73522f0df2d6a8550fd0a751f797cc40))
+
 ## [1.2.0](https://github.com/appium/appium-mcp/compare/v1.1.17...v1.2.0) (2025-12-01)
 
 ### Features
