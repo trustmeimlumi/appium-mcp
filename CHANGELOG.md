@@ -1,3 +1,9 @@
+## [1.6.1](https://github.com/appium/appium-mcp/compare/v1.6.0...v1.6.1) (2026-01-05)
+
+### Bug Fixes
+
+* Update Go version in publish workflow ([#74](https://github.com/appium/appium-mcp/issues/74)) ([580be03](https://github.com/appium/appium-mcp/commit/580be03b59aa4ce8b47f169cfbeb8ac8dd310f35))
+
 ## [1.6.0](https://github.com/appium/appium-mcp/compare/v1.5.0...v1.6.0) (2025-12-22)
 
 ### Features
