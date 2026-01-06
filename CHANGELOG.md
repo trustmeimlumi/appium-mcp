@@ -1,3 +1,9 @@
+## [1.7.3](https://github.com/appium/appium-mcp/compare/v1.7.2...v1.7.3) (2026-01-06)
+
+### Miscellaneous Chores
+
+* run in version ([#78](https://github.com/appium/appium-mcp/issues/78)) ([1810d2c](https://github.com/appium/appium-mcp/commit/1810d2cf9c8fc8b00be08a4a0d1e450ceabafcf1))
+
 ## [1.7.2](https://github.com/appium/appium-mcp/compare/v1.7.1...v1.7.2) (2026-01-06)
 
 ### Miscellaneous Chores
