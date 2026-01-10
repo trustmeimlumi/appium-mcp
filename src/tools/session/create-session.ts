@@ -6,10 +6,12 @@ import { access, readFile } from 'fs/promises';
 import { constants } from 'fs';
 import { AndroidUiautomator2Driver } from 'appium-uiautomator2-driver';
 import { XCUITestDriver } from 'appium-xcuitest-driver';
+import { remote } from 'webdriverio';
 import {
   setSession,
   hasActiveSession,
   safeDeleteSession,
+  getAppiumConfig,
 } from '../../session-store.js';
 import {
   getSelectedDevice,
@@ -85,11 +87,13 @@ function buildAndroidCapabilities(
   };
 
   const selectedDeviceUdid = getSelectedDevice();
+  const envUdid = process.env.APPIUM_UDID;
 
   const capabilities = {
     ...defaultCaps,
     ...configCaps,
     ...(selectedDeviceUdid && { 'appium:udid': selectedDeviceUdid }),
+    ...(envUdid && !selectedDeviceUdid && { 'appium:udid': envUdid }),
     ...customCaps,
   };
 
@@ -141,6 +145,7 @@ async function buildIOSCapabilities(
 
   const selectedDeviceUdid = getSelectedDevice();
   const selectedDeviceInfo = getSelectedDeviceInfo();
+  const envUdid = process.env.APPIUM_UDID;
 
   log.debug('Selected device info:', selectedDeviceInfo);
 
@@ -157,6 +162,7 @@ async function buildIOSCapabilities(
     ...(platformVersion && { 'appium:platformVersion': platformVersion }),
     ...configCaps,
     ...(selectedDeviceUdid && { 'appium:udid': selectedDeviceUdid }),
+    ...(envUdid && !selectedDeviceUdid && { 'appium:udid': envUdid }),
     ...(deviceType === 'simulator' && {
       'appium:usePrebuiltWDA': true,
       'appium:wdaStartupRetries': 4,
@@ -176,12 +182,21 @@ async function buildIOSCapabilities(
  * Create the appropriate driver instance for the given platform
  */
 function createDriverForPlatform(platform: 'android' | 'ios'): any {
-  if (platform === 'android') {
-    return new AndroidUiautomator2Driver();
+  const { host } = getAppiumConfig();
+
+  // Use local appium drivers for localhost, webdriverio for remote hosts
+  if (host === 'localhost' || host === '127.0.0.1') {
+    if (platform === 'android') {
+      return new AndroidUiautomator2Driver();
+    }
+    if (platform === 'ios') {
+      return new XCUITestDriver();
+    }
+  } else {
+    // For remote connections, return a marker that indicates webdriverio should be used
+    return { useWebdriverio: true, platform };
   }
-  if (platform === 'ios') {
-    return new XCUITestDriver();
-  }
+
   throw new Error(
     `Unsupported platform: ${platform}. Please choose 'android' or 'ios'.`
   );
@@ -193,26 +208,44 @@ function createDriverForPlatform(platform: 'android' | 'ios'): any {
 async function createDriverSession(
   driver: any,
   capabilities: Capabilities
-): Promise<string> {
+): Promise<{ sessionId: string; client?: any }> {
+  const { host, port } = getAppiumConfig();
+
+  // Handle webdriverio remote connections
+  if (driver && driver.useWebdriverio) {
+    const { path } = getAppiumConfig();
+    const client = await remote({
+      protocol: 'http',
+      hostname: host,
+      port: parseInt(port.toString(), 10),
+      path: path,
+      capabilities: capabilities,
+      logLevel: 'info',
+    });
+
+    return { sessionId: client.sessionId, client };
+  }
+
+  // Handle local appium drivers
   // @ts-ignore
   const sessionId = await driver.createSession(null, {
     alwaysMatch: capabilities,
     firstMatch: [{}],
   });
-  return sessionId;
+  return { sessionId };
 }
 
 export default function createSession(server: any): void {
   server.addTool({
     name: 'create_session',
     description: `Create a new mobile session with Android or iOS device.
-      MUST use select_platform tool first to ask the user which platform they want.
-      DO NOT assume or default to any platform.
+      If APPIUM_PLATFORM environment variable is set, platform parameter is optional.
+      Otherwise, MUST use select_platform tool first to ask the user which platform they want.
       `,
     parameters: z.object({
-      platform: z.enum(['ios', 'android']).describe(
-        `REQUIRED: Must match the platform the user explicitly selected via the select_platform tool.
-          DO NOT default to Android or iOS without asking the user first.`
+      platform: z.enum(['ios', 'android']).optional().describe(
+        `Platform to create session for. If not provided, uses APPIUM_PLATFORM environment variable.
+          If neither is set, you must use select_platform tool first.`
       ),
       capabilities: z
         .object({})
@@ -232,7 +265,21 @@ export default function createSession(server: any): void {
           await safeDeleteSession();
         }
 
-        const { platform, capabilities: customCapabilities } = args;
+        // Get platform from args or environment variable
+        let platform = args.platform;
+        if (!platform) {
+          const envPlatform = process.env.APPIUM_PLATFORM?.toLowerCase();
+          if (envPlatform === 'android' || envPlatform === 'ios') {
+            platform = envPlatform;
+            log.info(`Using platform from APPIUM_PLATFORM: ${platform}`);
+          } else {
+            throw new Error(
+              'Platform not specified. Either provide platform parameter or set APPIUM_PLATFORM environment variable to "android" or "ios".'
+            );
+          }
+        }
+
+        const { capabilities: customCapabilities } = args;
 
         const configCapabilities = await loadCapabilitiesConfig();
         const platformCaps =
@@ -252,8 +299,13 @@ export default function createSession(server: any): void {
           JSON.stringify(finalCapabilities, null, 2)
         );
 
-        const sessionId = await createDriverSession(driver, finalCapabilities);
-        setSession(driver, sessionId);
+        const { sessionId, client } = await createDriverSession(
+          driver,
+          finalCapabilities
+        );
+
+        // Store the driver/client in session
+        setSession(client || driver, sessionId);
 
         // Safely convert sessionId to string for display
         const sessionIdStr =

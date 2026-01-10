@@ -16,11 +16,11 @@ registerTools(server);
 
 // Handle client connection and disconnection events
 server.on('connect', event => {
-  log.info('Client connected:', event.session);
+  log.info('Client connected');
 });
 
 server.on('disconnect', async event => {
-  log.info('Client disconnected:', event.session);
+  log.info('Client disconnected');
   // Only try to clean up if there's an active session
   if (hasActiveSession()) {
     try {

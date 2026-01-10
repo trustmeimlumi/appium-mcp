@@ -23,7 +23,15 @@ export default function getText(server: FastMCP): void {
       }
 
       try {
-        const text = await driver.getText(args.elementUUID);
+        let text;
+        // Support both local drivers and WebDriverIO
+        if (driver.getElementText) {
+          // WebDriverIO client
+          text = await driver.getElementText(args.elementUUID);
+        } else {
+          // Local Appium driver
+          text = await driver.getText(args.elementUUID);
+        }
         return {
           content: [
             {

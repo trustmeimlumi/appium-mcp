@@ -6,6 +6,7 @@ MCP Appium is an intelligent MCP (Model Context Protocol) server designed to emp
 
 ## Table of Contents
 
+- [Quick Start for Cursor IDE Users](#-quick-start-for-cursor-ide-users)
 - [Features](#-features)
 - [Prerequisites](#-prerequisites)
 - [Installation](#️-installation)
@@ -15,6 +16,19 @@ MCP Appium is an intelligent MCP (Model Context Protocol) server designed to emp
 - [Usage Examples](#-usage-examples)
 - [Contributing](#-contributing)
 - [License](#-license)
+
+## 🎯 Quick Start for Cursor IDE Users
+
+**Want to use Appium MCP in Cursor IDE right away?**
+
+👉 **[See the step-by-step Cursor IDE Setup Guide](./docs/CURSOR_SETUP.md)**
+
+This guide walks you through:
+- Installing and building Appium MCP
+- Configuring `mcp.json` for Cursor
+- Connecting to local or remote Appium servers
+- Using MCP tools in Cursor Chat
+- Troubleshooting common issues
 
 ## 🚀 Features
 
@@ -56,6 +70,28 @@ Before you begin, ensure you have the following installed:
 4.  For real device testing, configure your provisioning profiles.
 
 ## 🛠️ Installation
+
+### Building from Source
+
+#### macOS/Linux:
+```bash
+git clone https://github.com/appium/appium-mcp.git
+cd appium-mcp
+npm install
+npm run build
+```
+
+#### Windows:
+```powershell
+git clone https://github.com/appium/appium-mcp.git
+cd appium-mcp
+npm install
+npm run build
+```
+
+**Note for Windows users:** The build script is Windows-compatible and uses `shx` for cross-platform shell commands. If you encounter build errors, ensure `shx` is installed: `npm install --save-dev shx`
+
+### Using with MCP Clients
 
 Standard config works in most of the tools::
 
@@ -131,6 +167,49 @@ claude mcp add appium-mcp -- npx -y appium-mcp@latest
 This will automatically configure the MCP server for use with Claude Code. Make sure to update the `ANDROID_HOME` environment variable in the configuration to match your Android SDK path.
 
 ## ⚙️ Configuration
+
+### Appium Server Configuration
+
+You can configure the Appium server host and port using command-line arguments or environment variables:
+
+#### Command Line Arguments
+- `--appium-host <host>`: Appium server hostname (default: localhost)
+- `--appium-port <port>`: Appium server port (default: 4723)
+- `--appium-path <path>`: Appium server path (default: /wd/hub)
+
+#### Environment Variables
+- `APPIUM_HOST`: Appium server hostname
+- `APPIUM_PORT`: Appium server port
+- `APPIUM_PATH`: Appium server path (default: /wd/hub)
+- `APPIUM_PLATFORM`: Default platform ("android" or "ios") - optional, used if platform is not explicitly specified
+- `APPIUM_UDID`: Default device UDID (optional, used if no device is explicitly selected)
+- `APPIUM_LOG_LEVEL`: Log level (error, warn, info, debug) - set to "error" to reduce log noise and fix JSON parse errors
+
+Examples:
+```bash
+# Use remote Appium server (standard setup)
+mcp-appium --appium-host appium.example.com --appium-port 4723 --appium-path /wd/hub
+
+# Cloud service with root path
+mcp-appium --appium-host cloud-service.com --appium-port 443 --appium-path /
+
+# Or equals-separated arguments
+mcp-appium --appium-host=appium.example.com --appium-port=4723 --appium-path=/wd/hub
+
+# Or set environment variables
+export APPIUM_HOST=appium.example.com
+export APPIUM_PORT=4723
+export APPIUM_PATH=/wd/hub
+export APPIUM_PLATFORM=ios  # Optional: default platform (android or ios)
+export APPIUM_UDID=00000000-0000000000000000  # Optional: default device UDID
+export APPIUM_LOG_LEVEL=error  # Recommended: reduce log noise and fix JSON parse errors
+mcp-appium
+
+# Local development with npm scripts
+npm run start -- --appium-host 10.10.10.10 --appium-port 4723 --appium-path /wd/hub
+```
+
+**Note**: When using a remote Appium server (host other than localhost/127.0.0.1), the server uses WebDriver protocol for communication. Local connections (localhost) use direct Appium driver integration for better performance.
 
 ### Capabilities
 
