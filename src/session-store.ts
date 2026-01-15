@@ -91,7 +91,11 @@ export async function safeDeleteSession(): Promise<boolean> {
   }
 }
 
-export function setAppiumConfig(host: string, port: number, path?: string): void {
+export function setAppiumConfig(
+  host: string,
+  port: number,
+  path?: string
+): void {
   appiumConfig.host = host;
   appiumConfig.port = port;
   if (path) {
@@ -100,20 +104,24 @@ export function setAppiumConfig(host: string, port: number, path?: string): void
   log.info(`Appium server configured: ${host}:${port}${appiumConfig.path}`);
 }
 
-export function getAppiumConfig(): { host: string; port: number; path: string } {
+export function getAppiumConfig(): {
+  host: string;
+  port: number;
+  path: string;
+} {
   return { ...appiumConfig };
 }
 
 export const getPlatformName = (driver: any): string => {
   if (driver instanceof AndroidUiautomator2Driver) return PLATFORM.android;
   if (driver instanceof XCUITestDriver) return PLATFORM.ios;
-  
+
   // Handle WebDriverIO remote client
   if (driver && driver.capabilities) {
     const platformName = driver.capabilities.platformName;
     if (platformName === 'Android') return PLATFORM.android;
     if (platformName === 'iOS') return PLATFORM.ios;
   }
-  
+
   throw new Error('Unknown driver type');
 };

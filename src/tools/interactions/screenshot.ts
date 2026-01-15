@@ -29,7 +29,10 @@ export function resolveScreenshotDir(): string {
 }
 
 export interface ScreenshotDeps {
-  getDriver: () => { getScreenshot?: () => Promise<string>; takeScreenshot?: () => Promise<string> } | null;
+  getDriver: () => {
+    getScreenshot?: () => Promise<string>;
+    takeScreenshot?: () => Promise<string>;
+  } | null;
   writeFile: typeof writeFile;
   mkdir: typeof mkdir;
   resolveScreenshotDir: typeof resolveScreenshotDir;
@@ -54,7 +57,7 @@ export async function executeScreenshot(
 
   try {
     // Support both local drivers (getScreenshot) and WebDriverIO (takeScreenshot)
-    const screenshotBase64 = driver.takeScreenshot 
+    const screenshotBase64 = driver.takeScreenshot
       ? await driver.takeScreenshot()
       : await driver.getScreenshot!();
 

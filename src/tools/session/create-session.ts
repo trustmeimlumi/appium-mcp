@@ -243,10 +243,13 @@ export default function createSession(server: any): void {
       Otherwise, MUST use select_platform tool first to ask the user which platform they want.
       `,
     parameters: z.object({
-      platform: z.enum(['ios', 'android']).optional().describe(
-        `Platform to create session for. If not provided, uses APPIUM_PLATFORM environment variable.
+      platform: z
+        .enum(['ios', 'android'])
+        .optional()
+        .describe(
+          `Platform to create session for. If not provided, uses APPIUM_PLATFORM environment variable.
           If neither is set, you must use select_platform tool first.`
-      ),
+        ),
       capabilities: z
         .object({})
         .optional()

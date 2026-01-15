@@ -35,7 +35,7 @@ export default function findElement(server: FastMCP): void {
 
       try {
         let elementId;
-        
+
         // Support both local drivers and WebDriverIO
         if (driver.$) {
           // WebDriverIO client - convert strategy to WebDriverIO selector
@@ -49,15 +49,18 @@ export default function findElement(server: FastMCP): void {
           } else if (args.strategy === 'class name') {
             selector = `.${args.selector}`;
           }
-          
+
           const element = await driver.$(selector);
           elementId = await element.elementId;
         } else {
           // Local Appium driver
-          const element = await driver.findElement(args.strategy, args.selector);
+          const element = await driver.findElement(
+            args.strategy,
+            args.selector
+          );
           elementId = element.ELEMENT;
         }
-        
+
         return {
           content: [
             {

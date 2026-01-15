@@ -19,7 +19,8 @@ const log = {
     if (logLevelEnv !== 'error') appiumLog.info(message, ...args);
   },
   debug: (message: string, ...args: any[]) => {
-    if (logLevelEnv !== 'error' && logLevelEnv !== 'warn') appiumLog.debug(message, ...args);
+    if (logLevelEnv !== 'error' && logLevelEnv !== 'warn')
+      appiumLog.debug(message, ...args);
   },
 };
 
