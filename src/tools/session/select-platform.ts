@@ -195,16 +195,18 @@ async function handleIOSPlatformSelection(
 export default function selectPlatform(server: any): void {
   server.addTool({
     name: 'select_platform',
-    description: `REQUIRED: First ASK THE USER which mobile platform they want to use (Android or iOS) before creating a session.
-      DO NOT assume or default to any platform.
-      You MUST explicitly prompt the user to choose between Android or iOS.
-      This is mandatory before proceeding to use the create_session tool.
+    description: `Select mobile platform (Android or iOS) before creating a session.
+      If APPIUM_PLATFORM environment variable is set, platform parameter is optional and will be automatically used.
+      Otherwise, you MUST ask the user which platform they want to use.
       `,
     parameters: z.object({
       platform: z
         .enum(['ios', 'android'])
+        .optional()
         .describe(
-          "REQUIRED: The platform chosen by the user - 'android' for Android devices/emulators or 'ios' for iOS devices/simulators. This must be based on the user's explicit choice, NOT a default assumption."
+          `Platform to select - 'android' for Android devices/emulators or 'ios' for iOS devices/simulators. 
+          If not provided, uses APPIUM_PLATFORM environment variable if set.
+          If neither is set, you must ask the user to choose.`
         ),
       iosDeviceType: z
         .enum(['simulator', 'real'])
@@ -219,7 +221,20 @@ export default function selectPlatform(server: any): void {
     },
     execute: async (args: any, context: any): Promise<any> => {
       try {
-        const { platform, iosDeviceType } = args;
+        let { platform, iosDeviceType } = args;
+
+        // If platform not provided, try to get from APPIUM_PLATFORM environment variable
+        if (!platform) {
+          const envPlatform = process.env.APPIUM_PLATFORM?.toLowerCase();
+          if (envPlatform === 'android' || envPlatform === 'ios') {
+            platform = envPlatform;
+            log.info(`Using platform from APPIUM_PLATFORM: ${platform}`);
+          } else {
+            throw new Error(
+              'Platform not specified. Either provide platform parameter or set APPIUM_PLATFORM environment variable to "android" or "ios".'
+            );
+          }
+        }
 
         if (platform === 'android') {
           log.info('Platform selected: ANDROID');

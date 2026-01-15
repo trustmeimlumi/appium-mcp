@@ -1,3 +1,43 @@
+## [Unreleased] (remote_poc branch)
+
+### Breaking Changes
+
+* **config:** All Appium configuration parameters are now **REQUIRED** and must be configured in mcp.json
+  - `APPIUM_HOST` - **REQUIRED**: Appium server hostname
+  - `APPIUM_PORT` - **REQUIRED**: Appium server port
+  - `APPIUM_PATH` - **REQUIRED**: Appium server path (e.g., /wd/hub)
+  - `APPIUM_PLATFORM` - **REQUIRED**: Platform to automate (android or ios)
+  - `APPIUM_UDID` - **REQUIRED**: Device UDID
+  - The server will fail to start with a clear error message if any required parameter is missing
+  - This change enforces explicit configuration and prevents unintended defaults
+
+* **capabilities:** Removed capabilities.json file support
+  - `CAPABILITIES_CONFIG` environment variable is no longer supported
+  - All configuration must be done via MCP settings (mcp.json) environment variables
+  - Custom capabilities can still be passed via the `create_session` tool's capabilities parameter
+
+### Documentation
+
+* **setup:** Updated all documentation to reflect mandatory mcp.json configuration
+  - Added prominent warnings in CURSOR_SETUP.md about required parameters
+  - Updated README.md with complete list of required parameters
+  - Updated remote-appium-server.md with example configurations
+  - Removed all references to capabilities.json files
+
+## [1.7.5](https://github.com/appium/appium-mcp/compare/v1.7.4...v1.7.5) (2026-01-12)
+
+### Miscellaneous Chores
+
+* **deps:** bump @langfuse/otel from 4.2.0 to 4.5.1 ([#84](https://github.com/appium/appium-mcp/issues/84)) ([903bdd3](https://github.com/appium/appium-mcp/commit/903bdd35154e46a0ce14421bbec8f2b00abb7b56))
+* **deps:** bump node-simctl from 8.0.4 to 8.1.3 ([#83](https://github.com/appium/appium-mcp/issues/83)) ([bfa9d22](https://github.com/appium/appium-mcp/commit/bfa9d228f0144d6a19f3dd082c9adbcaa9b915dd))
+
+## [1.7.4](https://github.com/appium/appium-mcp/compare/v1.7.3...v1.7.4) (2026-01-12)
+
+### Miscellaneous Chores
+
+* **deps-dev:** bump eslint from 9.28.0 to 9.39.2 ([#80](https://github.com/appium/appium-mcp/issues/80)) ([8cd8e5f](https://github.com/appium/appium-mcp/commit/8cd8e5fd2bac4285af660971dee55d32a3eeed34))
+* **deps-dev:** bump ts-jest from 29.3.4 to 29.4.6 ([#82](https://github.com/appium/appium-mcp/issues/82)) ([3dccfa7](https://github.com/appium/appium-mcp/commit/3dccfa743bb2787fdb7519fef983b960fa0cf8e2))
+
 ## [1.7.3](https://github.com/appium/appium-mcp/compare/v1.7.2...v1.7.3) (2026-01-06)
 
 ### Miscellaneous Chores

@@ -23,7 +23,15 @@ export default function generateTest(server: FastMCP): void {
       }
 
       try {
-        await driver.click(args.elementUUID);
+        // Support both local drivers and WebDriverIO
+        if (driver.$) {
+          // WebDriverIO client - elementUUID is the Appium element reference
+          // Use elementClick command with the element ID
+          await driver.elementClick(args.elementUUID);
+        } else {
+          // Local Appium driver
+          await driver.click(args.elementUUID);
+        }
         return {
           content: [
             {

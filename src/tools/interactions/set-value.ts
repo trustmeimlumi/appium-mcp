@@ -24,7 +24,14 @@ export default function setValue(server: FastMCP): void {
       }
 
       try {
-        await driver.setValue(args.text, args.elementUUID);
+        // Support both local drivers and WebDriverIO
+        if (driver.elementSendKeys) {
+          // WebDriverIO client
+          await driver.elementSendKeys(args.elementUUID, args.text);
+        } else {
+          // Local Appium driver
+          await driver.setValue(args.text, args.elementUUID);
+        }
         return {
           content: [
             {

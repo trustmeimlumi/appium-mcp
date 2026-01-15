@@ -14,8 +14,33 @@ async function listAppsFromDevice(): Promise<any[]> {
   }
 
   const platform = getPlatformName(driver);
+
+  // Check if this is a WebDriverIO remote client
+  if (driver.execute && typeof driver.execute === 'function') {
+    // Use WebDriver protocol for remote connections
+    try {
+      const apps = await driver.execute('mobile: listApps', {});
+
+      // Convert to array format if it's an object
+      if (typeof apps === 'object' && !Array.isArray(apps)) {
+        return Object.entries(apps).map(([bundleId, info]: [string, any]) => ({
+          bundleId,
+          name: info.CFBundleDisplayName || info.CFBundleName || bundleId,
+          version: info.CFBundleShortVersionString || 'N/A',
+        }));
+      }
+
+      return Array.isArray(apps) ? apps : [];
+    } catch (error) {
+      throw new Error(`Failed to list apps via WebDriver: ${error}`);
+    }
+  }
+
+  // Local driver - original implementation
   if (platform === 'iOS') {
-    throw new Error('listApps is not yet implemented for iOS');
+    throw new Error(
+      'listApps is not yet implemented for iOS with local drivers'
+    );
   }
 
   const appPackages = await driver.adb.adbExec([

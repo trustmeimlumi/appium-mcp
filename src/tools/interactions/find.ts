@@ -34,12 +34,38 @@ export default function findElement(server: FastMCP): void {
       }
 
       try {
-        const element = await driver.findElement(args.strategy, args.selector);
+        let elementId;
+
+        // Support both local drivers and WebDriverIO
+        if (driver.$) {
+          // WebDriverIO client - convert strategy to WebDriverIO selector
+          let selector = args.selector;
+          if (args.strategy === 'xpath') {
+            selector = args.selector;
+          } else if (args.strategy === 'id') {
+            selector = `#${args.selector}`;
+          } else if (args.strategy === 'accessibility id') {
+            selector = `~${args.selector}`;
+          } else if (args.strategy === 'class name') {
+            selector = `.${args.selector}`;
+          }
+
+          const element = await driver.$(selector);
+          elementId = await element.elementId;
+        } else {
+          // Local Appium driver
+          const element = await driver.findElement(
+            args.strategy,
+            args.selector
+          );
+          elementId = element.ELEMENT;
+        }
+
         return {
           content: [
             {
               type: 'text',
-              text: `Successfully found element ${args.selector} with strategy ${args.strategy}. Element id ${element.ELEMENT}`,
+              text: `Successfully found element ${args.selector} with strategy ${args.strategy}. Element id ${elementId}`,
             },
           ],
         };

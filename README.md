@@ -6,25 +6,38 @@ MCP Appium is an intelligent MCP (Model Context Protocol) server designed to emp
 
 ## Table of Contents
 
+- [Quick Start](#-quick-start)
 - [Features](#-features)
 - [Prerequisites](#-prerequisites)
 - [Installation](#️-installation)
 - [Configuration](#️-configuration)
 - [Available Tools](#-available-tools)
-- [Client Support](#-client-support)
 - [Usage Examples](#-usage-examples)
 - [Contributing](#-contributing)
 - [License](#-license)
+
+## 🎯 Quick Start
+
+**Want to get started quickly?**
+
+👉 **[See the step-by-step Setup Guide](./docs/CURSOR_SETUP.md)**
+
+This guide walks you through:
+- Installing and building Appium MCP
+- Configuring `mcp.json` for your MCP client
+- Connecting to local or remote Appium servers
+- Using MCP tools
+- Troubleshooting common issues
 
 ## 🚀 Features
 
 - **Cross-Platform Support**: Automate tests for both Android (UiAutomator2) and iOS (XCUITest).
 - **Intelligent Locator Generation**: AI-powered element identification using priority-based strategies.
-- **Interactive Session Management**: Easily create and manage sessions on local mobile devices.
+- **Interactive Session Management**: Easily create and manage sessions on local and remote mobile devices.
 - **Smart Element Interactions**: Perform actions like clicks, text input, screenshots, and element finding.
 - **Automated Test Generation**: Generate Java/TestNG test code from natural language descriptions.
 - **Page Object Model Support**: Utilize built-in templates that follow industry best practices.
-- **Flexible Configuration**: Customize capabilities and settings for different environments.
+- **Unified Configuration**: All configuration managed through MCP settings (mcp.json) for consistency.
 
 ## 📋 Prerequisites
 
@@ -57,7 +70,29 @@ Before you begin, ensure you have the following installed:
 
 ## 🛠️ Installation
 
-Standard config works in most of the tools::
+### Building from Source
+
+#### macOS/Linux:
+```bash
+git clone https://github.com/appium/appium-mcp.git
+cd appium-mcp
+npm install
+npm run build
+```
+
+#### Windows:
+```powershell
+git clone https://github.com/appium/appium-mcp.git
+cd appium-mcp
+npm install
+npm run build
+```
+
+**Note for Windows users:** The build script is Windows-compatible and uses `shx` for cross-platform shell commands. If you encounter build errors, ensure `shx` is installed: `npm install --save-dev shx`
+
+### Using with MCP Clients
+
+Add the following configuration to your MCP client settings (typically in `mcp.json` or similar):
 
 ```json
 {
@@ -67,95 +102,142 @@ Standard config works in most of the tools::
       "timeout": 100,
       "type": "stdio",
       "command": "npx",
-      "args": [
-        "appium-mcp@latest"
-      ],
+      "args": ["appium-mcp@latest"],
       "env": {
         "ANDROID_HOME": "/path/to/android/sdk",
-        "CAPABILITIES_CONFIG": "/path/to/your/capabilities.json"
+        "APPIUM_HOST": "localhost",
+        "APPIUM_PORT": "4723",
+        "APPIUM_PATH": "/wd/hub",
+        "APPIUM_PLATFORM": "android",
+        "APPIUM_UDID": "your-device-udid"
       }
     }
   }
 }
 ```
 
-### In Cursor IDE
+**Note:** Make sure to update:
+- `ANDROID_HOME` path to match your Android SDK installation
+- `APPIUM_UDID` with your actual device UDID (use `adb devices` for Android or `xcrun simctl list` for iOS simulators)
+- `APPIUM_PLATFORM` to "android" or "ios" depending on your target platform
+- `APPIUM_HOST` and `APPIUM_PORT` to match your Appium server location
 
-The easiest way to install MCP Appium in Cursor IDE is using the one-click install button:
+### Example: Cursor IDE
+
+For Cursor IDE users, use the one-click install:
 
 [![Install MCP Server](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/en-US/install-mcp?name=appium-mcp&config=eyJkaXNhYmxlZCI6ZmFsc2UsInRpbWVvdXQiOjEwMCwidHlwZSI6InN0ZGlvIiwiZW52Ijp7IkFORFJPSURfSE9NRSI6Ii9Vc2Vycy94eXovTGlicmFyeS9BbmRyb2lkL3NkayJ9LCJjb21tYW5kIjoibnB4IGFwcGl1bS1tY3BAbGF0ZXN0In0%3D)
 
-This will automatically configure the MCP server in your Cursor IDE settings. Make sure to update the `ANDROID_HOME` environment variable in the configuration to match your Android SDK path.
+Or manually: **Cursor Settings → MCP → Add new MCP Server**, then configure with the settings above.
 
-#### Or install manually:
+### Example: CLI Tools
 
-Go to **Cursor Settings → MCP → Add new MCP Server**. Name it to your liking, use command type with the command `npx -y appium-mcp@latest`. You can also verify config or add command arguments via clicking **Edit**.
+```bash
+# Gemini CLI
+gemini mcp add appium-mcp npx -y appium-mcp@latest
 
-Here is the recommended configuration:
+# Claude Code CLI
+claude mcp add appium-mcp -- npx -y appium-mcp@latest
+```
+
+**Important:** After CLI installation, you must manually add all required environment variables to the generated configuration.
+
+## ⚙️ Configuration
+
+### Appium Server Configuration
+
+**ALL PARAMETERS ARE REQUIRED**: You must configure all parameters in your MCP settings (mcp.json) via environment variables.
+
+#### Required Environment Variables
+All these parameters **MUST** be configured in your `mcp.json` file:
+
+- `APPIUM_HOST`: **REQUIRED** - Appium server hostname (e.g., localhost, 10.10.10.10, appium.example.com)
+- `APPIUM_PORT`: **REQUIRED** - Appium server port (e.g., 4723)
+- `APPIUM_PATH`: **REQUIRED** - Appium server path (e.g., /wd/hub, /)
+- `APPIUM_PLATFORM`: **REQUIRED** - Platform to automate ("android" or "ios")
+- `APPIUM_UDID`: **REQUIRED** - Device UDID (unique device identifier)
+
+#### Optional Environment Variables
+- `APPIUM_LOG_LEVEL`: Log level (error, warn, info, debug) - set to "error" to reduce log noise and fix JSON parse errors
+
+#### Example Configuration in mcp.json:
 
 ```json
 {
-  "appium-mcp": {
-    "disabled": false,
-    "timeout": 100,
-    "type": "stdio",
-    "command": "npx",
-    "args": ["appium-mcp@latest"],
-    "env": {
-      "ANDROID_HOME": "/Users/xyz/Library/Android/sdk"
+  "mcpServers": {
+    "appium-mcp": {
+      "disabled": false,
+      "timeout": 100,
+      "type": "stdio",
+      "command": "npx",
+      "args": ["appium-mcp@latest"],
+      "env": {
+        "ANDROID_HOME": "/Users/youruser/Library/Android/sdk",
+        "APPIUM_HOST": "localhost",
+        "APPIUM_PORT": "4723",
+        "APPIUM_PATH": "/wd/hub",
+        "APPIUM_PLATFORM": "android",
+        "APPIUM_UDID": "your-device-udid",
+        "APPIUM_LOG_LEVEL": "error"
+      }
     }
   }
 }
 ```
 
-**Note:** Make sure to update the `ANDROID_HOME` path to match your Android SDK installation path.
-
-### With Gemini CLI
-
-Use the Gemini CLI to add the MCP Appium server:
-
-```bash
-gemini mcp add appium-mcp npx -y appium-mcp@latest
-```
-
-This will automatically configure the MCP server for use with Gemini. Make sure to update the `ANDROID_HOME` environment variable in the configuration to match your Android SDK path.
-
-### With Claude Code CLI
-
-Use the Claude Code CLI to add the MCP Appium server:
-
-```bash
-claude mcp add appium-mcp -- npx -y appium-mcp@latest
-```
-
-This will automatically configure the MCP server for use with Claude Code. Make sure to update the `ANDROID_HOME` environment variable in the configuration to match your Android SDK path.
-
-## ⚙️ Configuration
-
-### Capabilities
-
-Create a `capabilities.json` file to define your device capabilities:
+#### Example for Remote Appium Server:
 
 ```json
 {
-  "android": {
-    "appium:app": "/path/to/your/android/app.apk",
-    "appium:deviceName": "Android Device",
-    "appium:platformVersion": "11.0",
-    "appium:automationName": "UiAutomator2",
-    "appium:udid": "your-device-udid"
-  },
-  "ios": {
-    "appium:app": "/path/to/your/ios/app.ipa",
-    "appium:deviceName": "iPhone 15 Pro",
-    "appium:platformVersion": "17.0",
-    "appium:automationName": "XCUITest",
-    "appium:udid": "your-device-udid"
+  "mcpServers": {
+    "appium-mcp": {
+      "disabled": false,
+      "timeout": 100,
+      "type": "stdio",
+      "command": "npx",
+      "args": ["appium-mcp@latest"],
+      "env": {
+        "APPIUM_HOST": "appium.example.com",
+        "APPIUM_PORT": "4723",
+        "APPIUM_PATH": "/wd/hub",
+        "APPIUM_PLATFORM": "ios",
+        "APPIUM_UDID": "00000000-0000000000000000",
+        "APPIUM_LOG_LEVEL": "error"
+      }
+    }
   }
 }
 ```
 
-Set the `CAPABILITIES_CONFIG` environment variable to point to your configuration file.
+#### Example for Cloud Services:
+
+```json
+{
+  "mcpServers": {
+    "appium-mcp": {
+      "disabled": false,
+      "timeout": 100,
+      "type": "stdio",
+      "command": "npx",
+      "args": ["appium-mcp@latest"],
+      "env": {
+        "APPIUM_HOST": "cloud-service.com",
+        "APPIUM_PORT": "443",
+        "APPIUM_PATH": "/",
+        "APPIUM_PLATFORM": "android",
+        "APPIUM_UDID": "cloud-device-id",
+        "APPIUM_LOG_LEVEL": "error"
+      }
+    }
+  }
+}
+```
+
+**Note**: When using a remote Appium server (host other than localhost/127.0.0.1), the server uses WebDriver protocol for communication. Local connections (localhost) use direct Appium driver integration for better performance.
+
+### Additional Configuration (Optional)
+
+If you need to pass additional capabilities to Appium, you can do so when calling the `create_session` tool with custom capabilities parameter.
 
 ### Screenshots
 
@@ -229,9 +311,6 @@ MCP Appium provides a comprehensive set of tools organized into the following ca
 | `appium_generate_tests`      | Generate automated test code from natural language scenarios                     |
 | `appium_documentation_query` | Query Appium documentation using RAG for help and guidance                       |
 
-## 🤖 Client Support
-
-MCP Appium is designed to be compatible with any MCP-compliant client.
 
 ## 📚 Usage Examples
 
