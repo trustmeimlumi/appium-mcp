@@ -61,11 +61,13 @@ C:\Users\<username>\.cursor\mcp.json
 
 > **⚠️ Windows Paths**: In JSON strings, backslashes must be doubled (`\\`). For example: `"c:\\projects\\appium-mcp\\dist/index.js"`
 
+> **⚠️ REQUIRED CONFIGURATION**: You **MUST** specify `APPIUM_HOST` and `APPIUM_PORT` in your mcp.json configuration. There are no default values - the server will fail to start without these parameters.
+
 ### Add this configuration:
 
-#### For Remote Appium Server (recommended):
+#### For Remote Appium Server:
 
-**Option A: Environment Variables (simpler)**
+**Configuration with Environment Variables:**
 
 ```json
 {
@@ -80,7 +82,7 @@ C:\Users\<username>\.cursor\mcp.json
         "APPIUM_PORT": "4723",
         "APPIUM_PATH": "/wd/hub",
         "APPIUM_PLATFORM": "android",
-        "APPIUM_UDID": "00000000-0000000000000000",
+        "APPIUM_UDID": "your-device-udid",
         "APPIUM_LOG_LEVEL": "error"
       },
       "command": "node",
@@ -91,32 +93,6 @@ C:\Users\<username>\.cursor\mcp.json
 }
 ```
 
-**Option B: Command Line Arguments**
-
-```json
-{
-  "mcpServers": {
-    "appium-mcp": {
-      "disabled": false,
-      "timeout": 100,
-      "type": "stdio",
-      "env": {
-        "ANDROID_HOME": "/Users/youruser/Library/Android/sdk",
-        "APPIUM_PLATFORM": "android",
-        "APPIUM_UDID": "00000000-0000000000000000",
-        "APPIUM_LOG_LEVEL": "error"
-      },
-      "command": "node",
-      "args": [
-        "/Users/youruser/projects/appium-mcp/dist/index.js",
-        "--appium-host", "10.10.10.10",
-        "--appium-port", "4723",
-        "--appium-path", "/wd/hub"
-      ]
-    }
-  }
-}
-```
 
 #### For Local Appium Server (localhost:4723):
 
@@ -129,6 +105,8 @@ C:\Users\<username>\.cursor\mcp.json
       "type": "stdio",
       "env": {
         "ANDROID_HOME": "/Users/youruser/Library/Android/sdk",
+        "APPIUM_HOST": "localhost",
+        "APPIUM_PORT": "4723",
         "APPIUM_PLATFORM": "android",
         "APPIUM_UDID": "your-device-udid"
       },
@@ -140,20 +118,7 @@ C:\Users\<username>\.cursor\mcp.json
 }
 ```
 
-> **Note**: For local setup, only `ANDROID_HOME` and optionally `APPIUM_UDID` are needed. Default host/port/path values: `localhost:4723/wd/hub`
-
-### 🤔 Which Option Should I Choose?
-
-**Option A (Environment Variables)** - If:
-- ✅ You want simpler configuration
-- ✅ You use the same server across multiple projects
-- ✅ You want easy copy/paste
-
-**Option B (Command Line Arguments)** - If:
-- ✅ You want to see arguments explicitly
-- ✅ You want project-specific settings
-
-> **Tip**: Option A (env) is usually more practical!
+> **Note**: `APPIUM_HOST` and `APPIUM_PORT` are **REQUIRED** even for local setup. You must explicitly set them to "localhost" and "4723" in your configuration.
 
 ### ⚠️ Values to Replace:
 
@@ -161,12 +126,12 @@ C:\Users\<username>\.cursor\mcp.json
 |-------|-------------|-------------|
 | `args[0]` | `/Users/youruser/projects/appium-mcp/dist/index.js` (macOS/Linux)<br>`c:\\projects\\appium-mcp\\dist/index.js` (Windows) | Your installation path<br>**Windows**: Backslashes must be doubled (`\\`) |
 | `ANDROID_HOME` | `/Users/youruser/Library/Android/sdk` | Your Android SDK path |
-| `APPIUM_HOST` | `10.10.10.10` | Remote Appium server IP/hostname |
-| `APPIUM_PORT` | `4723` | Remote Appium server port |
-| `APPIUM_PATH` | `/wd/hub` | Appium path (usually `/wd/hub` or `/`) |
-| `APPIUM_PLATFORM` | `android` | Platform: `android` or `ios` (optional) |
-| `APPIUM_UDID` | `00000000-0000000000000000` | Device UDID (optional) |
-| `APPIUM_LOG_LEVEL` | `error` | Log level (error/warn/info/debug) - recommended: `error` |
+| `APPIUM_HOST` | `10.10.10.10` | **REQUIRED**: Appium server hostname |
+| `APPIUM_PORT` | `4723` | **REQUIRED**: Appium server port |
+| `APPIUM_PATH` | `/wd/hub` | **REQUIRED**: Appium path (usually `/wd/hub` or `/`) |
+| `APPIUM_PLATFORM` | `android` | **REQUIRED**: Platform (`android` or `ios`) |
+| `APPIUM_UDID` | `your-device-udid` | **REQUIRED**: Device UDID |
+| `APPIUM_LOG_LEVEL` | `error` | Optional: Log level (error/warn/info/debug) |
 
 ---
 
@@ -415,15 +380,7 @@ Set a separate directory for screenshots:
 }
 ```
 
-### 3. Capabilities File
-Use a capabilities file for complex configuration:
-```json
-"env": {
-  "CAPABILITIES_CONFIG": "/Users/youruser/appium-caps.json"
-}
-```
-
-### 4. Natural Language
+### 3. Natural Language
 You can use natural language in Cursor Chat:
 ```
 @appium-mcp Launch the banking app and take a screenshot

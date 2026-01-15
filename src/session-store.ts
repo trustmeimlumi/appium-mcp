@@ -6,10 +6,14 @@ let driver: any = null;
 let sessionId: string | null = null;
 let isDeletingSession = false; // Lock to prevent concurrent deletion
 
-// Appium server configuration
-let appiumConfig = {
-  host: 'localhost',
-  port: 4723,
+// Appium server configuration - must be set via setAppiumConfig()
+let appiumConfig: {
+  host: string | null;
+  port: number | null;
+  path: string;
+} = {
+  host: null,
+  port: null,
   path: '/wd/hub',
 };
 
@@ -96,6 +100,11 @@ export function setAppiumConfig(
   port: number,
   path?: string
 ): void {
+  if (!host || !port) {
+    throw new Error(
+      'Invalid Appium configuration: host and port are required'
+    );
+  }
   appiumConfig.host = host;
   appiumConfig.port = port;
   if (path) {
@@ -109,7 +118,16 @@ export function getAppiumConfig(): {
   port: number;
   path: string;
 } {
-  return { ...appiumConfig };
+  if (!appiumConfig.host || !appiumConfig.port) {
+    throw new Error(
+      'Appium server configuration not set. Host and port must be configured via MCP settings (mcp.json). See documentation for setup instructions.'
+    );
+  }
+  return {
+    host: appiumConfig.host,
+    port: appiumConfig.port,
+    path: appiumConfig.path,
+  };
 }
 
 export const getPlatformName = (driver: any): string => {

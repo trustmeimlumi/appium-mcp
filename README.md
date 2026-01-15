@@ -108,7 +108,11 @@ Standard config works in most of the tools::
       ],
       "env": {
         "ANDROID_HOME": "/path/to/android/sdk",
-        "CAPABILITIES_CONFIG": "/path/to/your/capabilities.json"
+        "APPIUM_HOST": "localhost",
+        "APPIUM_PORT": "4723",
+        "APPIUM_PATH": "/wd/hub",
+        "APPIUM_PLATFORM": "android",
+        "APPIUM_UDID": "your-device-udid"
       }
     }
   }
@@ -170,19 +174,18 @@ This will automatically configure the MCP server for use with Claude Code. Make 
 
 ### Appium Server Configuration
 
-You can configure the Appium server host and port using command-line arguments or environment variables:
+**ALL PARAMETERS ARE REQUIRED**: You must configure all parameters in your MCP settings (mcp.json) via environment variables.
 
-#### Command Line Arguments
-- `--appium-host <host>`: Appium server hostname (default: localhost)
-- `--appium-port <port>`: Appium server port (default: 4723)
-- `--appium-path <path>`: Appium server path (default: /wd/hub)
+#### Required Environment Variables
+All these parameters **MUST** be configured in your `mcp.json` file:
 
-#### Environment Variables
-- `APPIUM_HOST`: Appium server hostname
-- `APPIUM_PORT`: Appium server port
-- `APPIUM_PATH`: Appium server path (default: /wd/hub)
-- `APPIUM_PLATFORM`: Default platform ("android" or "ios") - optional, used if platform is not explicitly specified
-- `APPIUM_UDID`: Default device UDID (optional, used if no device is explicitly selected)
+- `APPIUM_HOST`: **REQUIRED** - Appium server hostname (e.g., localhost, 10.10.10.10, appium.example.com)
+- `APPIUM_PORT`: **REQUIRED** - Appium server port (e.g., 4723)
+- `APPIUM_PATH`: **REQUIRED** - Appium server path (e.g., /wd/hub, /)
+- `APPIUM_PLATFORM`: **REQUIRED** - Platform to automate ("android" or "ios")
+- `APPIUM_UDID`: **REQUIRED** - Device UDID (unique device identifier)
+
+#### Optional Environment Variables
 - `APPIUM_LOG_LEVEL`: Log level (error, warn, info, debug) - set to "error" to reduce log noise and fix JSON parse errors
 
 Examples:
@@ -211,30 +214,9 @@ npm run start -- --appium-host 10.10.10.10 --appium-port 4723 --appium-path /wd/
 
 **Note**: When using a remote Appium server (host other than localhost/127.0.0.1), the server uses WebDriver protocol for communication. Local connections (localhost) use direct Appium driver integration for better performance.
 
-### Capabilities
+### Additional Configuration (Optional)
 
-Create a `capabilities.json` file to define your device capabilities:
-
-```json
-{
-  "android": {
-    "appium:app": "/path/to/your/android/app.apk",
-    "appium:deviceName": "Android Device",
-    "appium:platformVersion": "11.0",
-    "appium:automationName": "UiAutomator2",
-    "appium:udid": "your-device-udid"
-  },
-  "ios": {
-    "appium:app": "/path/to/your/ios/app.ipa",
-    "appium:deviceName": "iPhone 15 Pro",
-    "appium:platformVersion": "17.0",
-    "appium:automationName": "XCUITest",
-    "appium:udid": "your-device-udid"
-  }
-}
-```
-
-Set the `CAPABILITIES_CONFIG` environment variable to point to your configuration file.
+If you need to pass additional capabilities to Appium, you can do so when calling the `create_session` tool with custom capabilities parameter.
 
 ### Screenshots
 

@@ -1,100 +1,109 @@
 # Using MCP Appium with Remote Appium Server
 
-This example demonstrates how to use MCP Appium with a remote Appium server instead of localhost.
+This example demonstrates how to use MCP Appium with a remote Appium server.
 
 ## Prerequisites
 
-- A running Appium server on a remote machine
-- Network access to the remote Appium server
+- A running Appium server (local or remote)
+- Network access to the Appium server
+
+> **⚠️ IMPORTANT**: `APPIUM_HOST` and `APPIUM_PORT` are **REQUIRED** parameters. You must configure them in your MCP settings (mcp.json) either via environment variables or command-line arguments. The server will not start without these parameters.
 
 ## Configuration
 
-### Method 1: Command Line Arguments
+### Configuration in mcp.json
 
-```bash
-# Start MCP Appium with remote Appium server (space-separated arguments)
-mcp-appium --appium-host your-appium-server.com --appium-port 4723
+All configuration must be done in your MCP settings file (`~/.cursor/mcp.json` or equivalent):
 
-# Or use equals-separated arguments
-mcp-appium --appium-host=your-appium-server.com --appium-port=4723
+#### Example: Remote Appium Server
 
-# Local development (if not installed globally)
-npm run start -- --appium-host your-appium-server.com --appium-port 4723
+```json
+{
+  "mcpServers": {
+    "appium-mcp": {
+      "disabled": false,
+      "timeout": 100,
+      "type": "stdio",
+      "env": {
+        "ANDROID_HOME": "/Users/youruser/Library/Android/sdk",
+        "APPIUM_HOST": "your-appium-server.com",
+        "APPIUM_PORT": "4723",
+        "APPIUM_PATH": "/wd/hub",
+        "APPIUM_PLATFORM": "android",
+        "APPIUM_UDID": "your-device-udid",
+        "APPIUM_LOG_LEVEL": "error"
+      },
+      "command": "node",
+      "args": ["/path/to/appium-mcp/dist/index.js"]
+    }
+  }
+}
 ```
 
-### Method 2: Environment Variables
+#### Example: Local Appium Server
 
-```bash
-# Set environment variables
-export APPIUM_HOST=your-appium-server.com
-export APPIUM_PORT=4723
-export APPIUM_PATH=/wd/hub  # Default path, adjust for your setup
-export APPIUM_PLATFORM=android  # Optional: default platform (android or ios)
-export APPIUM_UDID=00000000-0000000000000000  # Optional: default device UDID
-export APPIUM_LOG_LEVEL=error  # Recommended: reduce log noise and fix JSON parse errors
-
-# Start MCP Appium
-mcp-appium
+```json
+{
+  "mcpServers": {
+    "appium-mcp": {
+      "disabled": false,
+      "timeout": 100,
+      "type": "stdio",
+      "env": {
+        "ANDROID_HOME": "/Users/youruser/Library/Android/sdk",
+        "APPIUM_HOST": "localhost",
+        "APPIUM_PORT": "4723",
+        "APPIUM_PATH": "/wd/hub",
+        "APPIUM_PLATFORM": "android",
+        "APPIUM_UDID": "your-device-udid",
+        "APPIUM_LOG_LEVEL": "error"
+      },
+      "command": "node",
+      "args": ["/path/to/appium-mcp/dist/index.js"]
+    }
+  }
+}
 ```
 
-### Method 3: Using npm script
+#### Example: Cloud/Device Farm Services
 
-```bash
-# Use the provided script (replace with your host)
-npm run start:remote your-appium-server.com
-```
-
-### Method 4: Different Appium Setups
-
-#### Standard Appium Server:
-```bash
-npm run start -- --appium-host your-server.com --appium-port 4723 --appium-path /wd/hub
-```
-
-#### Cloud/Device Farm Services:
-```bash
-# Some cloud services use root path instead of /wd/hub
-npm run start -- --appium-host cloud-service.com --appium-port 443 --appium-path /
-```
-
-#### Custom Path:
-```bash
-# If your Appium server uses a custom path
-npm run start -- --appium-host your-server.com --appium-port 4723 --appium-path /custom/path
+```json
+{
+  "mcpServers": {
+    "appium-mcp": {
+      "disabled": false,
+      "timeout": 100,
+      "type": "stdio",
+      "env": {
+        "APPIUM_HOST": "cloud-service.com",
+        "APPIUM_PORT": "443",
+        "APPIUM_PATH": "/",
+        "APPIUM_PLATFORM": "ios",
+        "APPIUM_UDID": "cloud-device-id",
+        "APPIUM_LOG_LEVEL": "error"
+      },
+      "command": "node",
+      "args": ["/path/to/appium-mcp/dist/index.js"]
+    }
+  }
+}
 ```
 
 ## Usage
 
-Once configured, use MCP Appium tools as normal. The server will connect to your remote Appium instance:
+Once configured in your mcp.json, the server will automatically connect to your Appium instance with the configured settings. 
+
+Since `APPIUM_PLATFORM` and `APPIUM_UDID` are required in your configuration, you can create sessions without any parameters:
 
 ```javascript
-// Create a session on the remote Appium server
-await create_session({
-  platform: "android",
-  capabilities: {
-    "appium:deviceName": "Remote Android Device",
-    "appium:app": "/path/to/your/app.apk"
-  }
-});
-```
+// Create a session using all configured environment variables
+await create_session();
 
-### Using Default Platform and Device UDID
-
-If you set `APPIUM_PLATFORM` and `APPIUM_UDID` in your environment variables or MCP configuration, you can create sessions with minimal parameters:
-
-```javascript
-// With APPIUM_PLATFORM="android" and APPIUM_UDID set
-await create_session();  // No parameters needed!
-
-// Or just override the platform
-await create_session({
-  platform: "ios"  // Uses APPIUM_UDID but changes platform
-});
-
-// Or override specific capabilities
+// Or override with custom capabilities if needed
 await create_session({
   capabilities: {
-    "appium:udid": "different-device-udid"  // This overrides APPIUM_UDID
+    "appium:app": "/path/to/your/app.apk",
+    "appium:deviceName": "Custom Device Name"
   }
 });
 ```

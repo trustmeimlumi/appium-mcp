@@ -1,9 +1,8 @@
 /**
  * Tool to create a new mobile session (Android or iOS)
+ * All configuration comes from MCP settings (mcp.json) environment variables
  */
 import { z } from 'zod';
-import { access, readFile } from 'fs/promises';
-import { constants } from 'fs';
 import { AndroidUiautomator2Driver } from 'appium-uiautomator2-driver';
 import { XCUITestDriver } from 'appium-xcuitest-driver';
 import { remote } from 'webdriverio';
@@ -35,31 +34,6 @@ interface Capabilities {
   [key: string]: any;
 }
 
-// Define capabilities config type
-interface CapabilitiesConfig {
-  android: Record<string, any>;
-  ios: Record<string, any>;
-}
-
-/**
- * Load capabilities configuration from file if specified in environment
- */
-async function loadCapabilitiesConfig(): Promise<CapabilitiesConfig> {
-  const configPath = process.env.CAPABILITIES_CONFIG;
-  if (!configPath) {
-    return { android: {}, ios: {} };
-  }
-
-  try {
-    await access(configPath, constants.F_OK);
-    const configContent = await readFile(configPath, 'utf8');
-    return JSON.parse(configContent);
-  } catch (error) {
-    log.warn(`Failed to parse capabilities config: ${error}`);
-    return { android: {}, ios: {} };
-  }
-}
-
 /**
  * Remove empty string values from capabilities object
  */
@@ -74,10 +48,9 @@ function filterEmptyCapabilities(capabilities: Capabilities): Capabilities {
 }
 
 /**
- * Build Android capabilities by merging defaults, config, device selection, and custom capabilities
+ * Build Android capabilities from environment variables and custom capabilities
  */
 function buildAndroidCapabilities(
-  configCaps: Record<string, any>,
   customCaps: Record<string, any> | undefined
 ): Capabilities {
   const defaultCaps: Capabilities = {
@@ -91,7 +64,6 @@ function buildAndroidCapabilities(
 
   const capabilities = {
     ...defaultCaps,
-    ...configCaps,
     ...(selectedDeviceUdid && { 'appium:udid': selectedDeviceUdid }),
     ...(envUdid && !selectedDeviceUdid && { 'appium:udid': envUdid }),
     ...customCaps,
@@ -128,10 +100,9 @@ async function validateIOSDeviceSelection(
 }
 
 /**
- * Build iOS capabilities by merging defaults, config, device selection, and custom capabilities
+ * Build iOS capabilities from environment variables and custom capabilities
  */
 async function buildIOSCapabilities(
-  configCaps: Record<string, any>,
   customCaps: Record<string, any> | undefined
 ): Promise<Capabilities> {
   const deviceType = getSelectedDeviceType();
@@ -158,9 +129,8 @@ async function buildIOSCapabilities(
 
   const capabilities = {
     ...defaultCaps,
-    // Auto-detected platform version as fallback (before config)
+    // Auto-detected platform version as fallback
     ...(platformVersion && { 'appium:platformVersion': platformVersion }),
-    ...configCaps,
     ...(selectedDeviceUdid && { 'appium:udid': selectedDeviceUdid }),
     ...(envUdid && !selectedDeviceUdid && { 'appium:udid': envUdid }),
     ...(deviceType === 'simulator' && {
@@ -239,21 +209,24 @@ export default function createSession(server: any): void {
   server.addTool({
     name: 'create_session',
     description: `Create a new mobile session with Android or iOS device.
-      If APPIUM_PLATFORM environment variable is set, platform parameter is optional.
-      Otherwise, MUST use select_platform tool first to ask the user which platform they want.
+      All configuration must be set in MCP settings (mcp.json) via environment variables:
+      - APPIUM_HOST (required)
+      - APPIUM_PORT (required)
+      - APPIUM_PATH (required)
+      - APPIUM_PLATFORM (required): "android" or "ios"
+      - APPIUM_UDID (required): device UDID
       `,
     parameters: z.object({
       platform: z
         .enum(['ios', 'android'])
         .optional()
         .describe(
-          `Platform to create session for. If not provided, uses APPIUM_PLATFORM environment variable.
-          If neither is set, you must use select_platform tool first.`
+          `Platform to create session for. If not provided, uses APPIUM_PLATFORM environment variable from mcp.json.`
         ),
       capabilities: z
         .object({})
         .optional()
-        .describe('Optional custom capabilities for the session (W3C format).'),
+        .describe('Optional custom capabilities to override defaults (W3C format).'),
     }),
     annotations: {
       readOnlyHint: false,
@@ -268,7 +241,7 @@ export default function createSession(server: any): void {
           await safeDeleteSession();
         }
 
-        // Get platform from args or environment variable
+        // Get platform from args or environment variable (APPIUM_PLATFORM is required)
         let platform = args.platform;
         if (!platform) {
           const envPlatform = process.env.APPIUM_PLATFORM?.toLowerCase();
@@ -277,23 +250,17 @@ export default function createSession(server: any): void {
             log.info(`Using platform from APPIUM_PLATFORM: ${platform}`);
           } else {
             throw new Error(
-              'Platform not specified. Either provide platform parameter or set APPIUM_PLATFORM environment variable to "android" or "ios".'
+              'Platform not specified. APPIUM_PLATFORM environment variable must be set in mcp.json to "android" or "ios".'
             );
           }
         }
 
         const { capabilities: customCapabilities } = args;
 
-        const configCapabilities = await loadCapabilitiesConfig();
-        const platformCaps =
-          platform === 'android'
-            ? configCapabilities.android
-            : configCapabilities.ios;
-
         const finalCapabilities =
           platform === 'android'
-            ? buildAndroidCapabilities(platformCaps, customCapabilities)
-            : await buildIOSCapabilities(platformCaps, customCapabilities);
+            ? buildAndroidCapabilities(customCapabilities)
+            : await buildIOSCapabilities(customCapabilities);
 
         const driver = createDriverForPlatform(platform);
 

@@ -1,3 +1,29 @@
+## [Unreleased] (remote_poc branch)
+
+### Breaking Changes
+
+* **config:** All Appium configuration parameters are now **REQUIRED** and must be configured in mcp.json
+  - `APPIUM_HOST` - **REQUIRED**: Appium server hostname
+  - `APPIUM_PORT` - **REQUIRED**: Appium server port
+  - `APPIUM_PATH` - **REQUIRED**: Appium server path (e.g., /wd/hub)
+  - `APPIUM_PLATFORM` - **REQUIRED**: Platform to automate (android or ios)
+  - `APPIUM_UDID` - **REQUIRED**: Device UDID
+  - The server will fail to start with a clear error message if any required parameter is missing
+  - This change enforces explicit configuration and prevents unintended defaults
+
+* **capabilities:** Removed capabilities.json file support
+  - `CAPABILITIES_CONFIG` environment variable is no longer supported
+  - All configuration must be done via MCP settings (mcp.json) environment variables
+  - Custom capabilities can still be passed via the `create_session` tool's capabilities parameter
+
+### Documentation
+
+* **setup:** Updated all documentation to reflect mandatory mcp.json configuration
+  - Added prominent warnings in CURSOR_SETUP.md about required parameters
+  - Updated README.md with complete list of required parameters
+  - Updated remote-appium-server.md with example configurations
+  - Removed all references to capabilities.json files
+
 ## [1.7.5](https://github.com/appium/appium-mcp/compare/v1.7.4...v1.7.5) (2026-01-12)
 
 ### Miscellaneous Chores
